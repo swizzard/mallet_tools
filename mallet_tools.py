@@ -61,7 +61,7 @@ class MalletTools:
 		print "Done."
 	def write_features(self,file_in=None,file_out=None,features=None,verbose=True,test=False):
 		"""Write a Mallet-compliant list of features
-		:param file_in: an input file. Usually set to None
+		:param file_in: an input file. 
 		:param file_out: the name of the file to write to
 		:param features: a list formatted in the following way:
 			[[token1,[feature1,feature2...featureN,label]],[token2,[feature1,feature2...featureN,label]],...]
@@ -158,7 +158,7 @@ class MalletTools:
 		list1=feature_list,list2=output_list)
 		for i in xrange(len(output_list)):
 			feats = output_list[i][1]
-			new_feature = feature_list[i]
+			new_feature = str(feature_list[i])
 			token = output_list[i][0]
 			assert position <= len(feats),\
 			"""Per Mallet specifications, the final tag in an entry should be that entry's
