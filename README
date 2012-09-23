@@ -1,0 +1,30 @@
+MalletTools is a class for interacting with the Mallet tagging/clustering/ML package (http://mallet.cs.umass.edu/).
+NOTE: For the purposes of this class, a "properly formatted list" is formatted in the following way:
+[[token1, [feature1,feature2,...,featureN,tag]],[token2,[feature1,feature2,...,featureN,tag],...]
+A "Mallet-compliant text file" is defined as one containing one token/feature/tag set per line, with the token as the first element of each line and its tag as the last. Each element on each line is tab-separated, and each line (including the last) ends with a newline character.
+The following methods are available:
+Mallet_test_and_write(self,input,file_out,verbose):
+	Verifies Mallet-compliant status of input (either a file or list) and writes it to a txt file you can then import into Mallet.
+	If verbose is set to True, will print the contents of each line written to the screen
+	NOTE: input should be the (str) name of a file, or a properly-formatted list
+read_features(self,file_in,dest,verbose):
+	Reads features from a Mallet-compliant text file, storing them in self.dest
+	If verbose is set to True, will print the contents of each line written to the screen
+	NOTE: read_features can also be called via init
+add_feature(self,feature_list,output_list,replace_NE_tags,position,verbose):
+	Adds features from feature_list to output_list.
+	position refers to the position in the list of features for each tag.
+	If replace_NE_tags is set to False, the user will be prompted to replace or add named-entity (NE) tags.
+	If verbose is set to True, results will be printed to the screen
+write_features(self,file_in,file_out,features,verbose,test):
+	Reads features from either (self.)file_in or (self.)features and write them to a file using Mallet_test_and_write.
+	verbose is passed to Mallet_test_and_write (see above)
+	If test is set to True, the final feature of each token (i.e., its NE tag) is omitted when writing to the file, so the file can be used for testing purposes.
+add_list(self,list_name,l):
+	Assigns list l to self.list_name. Basically just a wrapper for setattr().
+
+Also included is a custom error class, MalletIOError.
+MalletIOError should be raised with the following parameters:
+source_name: The name of the source that caused the error to be raised. Generally, source_name should be a file name or the name of a list.
+line: The line that caused the error to be raised.
+line_no: The number of the line or the index of the list item that caused the error to be raised.
