@@ -1,5 +1,6 @@
 import string
 import re	
+import nltk
 class MalletTools:	
 	def __init__(self,file_in=None,file_out=None,features=None):
 		self.acceptable = re.compile(r'(\S*?\t)*(([A-Z])(-[A-Z]{3})?)')
@@ -23,14 +24,13 @@ class MalletTools:
 		:param verbose: if True, prints each line written to the screen before proceeding
 		:type verbose: bool (defaults to True)"""
 		if not input:
-			assert self.file_in or self.features
+			#assert self.file_in or self.features
 			if self.file_in:
 				input = self.file_in
 			elif self.features_list:
 				input = self.features
 		if not file_out:
 			file_out = self.file_out
-		assert file_out == True
 		if isinstance(input,str):
 			source_name = "file " + str(input)
 			infile = open(input)
@@ -43,17 +43,18 @@ class MalletTools:
 			raise ValueError("input must be valid filename or list!")
 		output = open(file_out,"w")
 		for i in xrange(len(source)):
-			line = source[i]
-			if re.match(acceptable,line):
-				output.write(line)
-			#if not re.match(acceptable,line):
-				#raise MalletIOError(source_name,line,source.index(line)+1)
-			elif re.match(whitespace,line):
-				pass
-			else:
-				raise MalletIOError(source_name,line,i)			
-				#if input.index(line)+1 < len(input) and not re.match(r'\n$',line):
-				#	output.write("\n")
+			line = source[i][0]+" "
+			line+=" ".join(source[i][-1])+"\n"
+			#if re.match(self.acceptable,line):
+			output.write(line)
+# 			#if not re.match(self.acceptable,line):
+# 				#raise MalletIOError(source_name,line,source.index(line)+1)
+# 			elif re.match(self.whitespace,line):
+# 				pass
+# 			else:
+# 				raise MalletIOError(source_name,line,i)			
+# 				#if input.index(line)+1 < len(input) and not re.match(r'\n$',line):
+# 				#	output.write("\n")
 		output.close()
 		if verbose:	
 			for line in source:
@@ -68,16 +69,16 @@ class MalletTools:
 			NOTE: there should be the same number of features for each word.
 			NOTE: set features to None if using file_in
 		:param test: whether or not the data to be written is for testing purposes"""
-		assert not (file_in and self.file_in),"Source file already present!"
-		assert not (file_out and self.file_out),"Output file already present!"
-		assert not (features and self.features),"List of features already present!"
+		#assert not (file_in and self.file_in),"Source file already present!"
+		#assert not (file_out and self.file_out),"Output file already present!"
+		#assert not (features and self.features),"List of features already present!"
 		if self.file_in:
 			file_in = self.file_in
 		if file_in:	
-			Mallet_test_and_write(file_in,file_out)
+			self.Mallet_test_and_write(file_in,file_out)
 		if self.file_out:
 			file_out = self.file_out
-		if self.feature_list:
+		if self.features:
 			features = self.features
 		else:
 			output_list = []
@@ -95,7 +96,7 @@ class MalletTools:
 						pass	
 				output_string += "\n"
 				output_list.append(output_string)
-			Mallet_test_and_write(output_list,file_out,verbose)
+			self.Mallet_test_and_write(output_list,file_out,verbose)
 	def read_features(self,file_in=None,dest="output_list",verbose=True):
 		"""Read features from a properly-formatted text file and convert them to a list
 		of format [[token1,[feature1,feature2,...,featureN]],[token2,[feature1,feature2,...,
@@ -147,23 +148,23 @@ class MalletTools:
 		(Mallet requires the NE tag to be the final feature on any line.)
 		:param verbose: if True, prints the results, as well as the modified list
 		:type verbose: bool (defaults to False)"""
-		assert not feature_list or not self.features,"Feature list already present!"
-		assert not output_list or not self.output_list
+		#assert not feature_list or not self.features,"Feature list already present!"
+		#assert not output_list or not self.output_list
 		if self.features:
 			feature_list = self.features
 		if self.output_list:
 			output_list = self.output_list		
-		assert len(feature_list) == len(output_list),\
-		 "length of {list1} is {list1.len}, length of {list2} is {list2.len}".format(\
-		list1=feature_list,list2=output_list)
+		#assert len(feature_list) == len(output_list),\
+		 #"length of {list1} is {list1.len}, length of {list2} is {list2.len}".format(\
+		#list1=feature_list,list2=output_list)
 		for i in xrange(len(output_list)):
 			feats = output_list[i][1]
 			new_feature = str(feature_list[i])
 			token = output_list[i][0]
-			assert position <= len(feats),\
-			"""Per Mallet specifications, the final tag in an entry should be that entry's
-			NE tag."""
-			if re.match(self.NERtag,new_feature) and not re.match(self.IN,new_feature) and position > 0:
+			#assert position <= len(feats),\
+			#"""Per Mallet specifications, the final tag in an entry should be that entry's
+			#NE tag."""
+			if re.match(self.NERtag,str(new_feature)) and not re.match(self.IN,str(new_feature)) and position > 0:
 				print "It looks like you're trying add a NE tag!"
 				NEtag = re.match(self.NERtag,feats[-1])
 				if NEtag:
@@ -201,6 +202,26 @@ class MalletTools:
 			print "Done!"
 			if verbose:
 				print self.output_list
+	def get_pos(self,list):
+		punc = string.punctuation
+		pos = nltk.tag.pos_tag(list)
+		for x in xrange(len(pos)):
+			if pos[x][0] == pos[x][1] and not pos[x][1].isalpha():
+				punc+=pos[x][1]
+		self.POS = []
+		for x in xrange(len(pos)):
+			if pos[x][1] in punc:
+				self.POS.append("PUNC")
+			else:
+				self.POS.append(pos[x][1])
+	def get_prevNE(self):
+		self.prevNE=["FIRST"]
+		for x in xrange(1,len(self.output_list)):
+			self.prevNE.append(self.output_list[x-1][1][-1])
+	def get_prevPOS(self):
+		self.prevPOS=["FIRST"]
+		for x in xrange(1,len(self.POS)):
+			self.prevPOS.append(self.POS[x-1])
 	class MalletIOError(Exception):
 		def __init__(self,source_name,line,line_no):
 			"""A custom error class for Mallet-related tasks.
@@ -219,3 +240,13 @@ class MalletTools:
 			self.line = line
 			self.line_no = line_no
 			print "The line:\n",self.line,"\n","line number",self.line_no,"in",self.source_name,"\nis improperly formatted"
+			
+#mt = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/train_nwire.txt",file_out="/Users/samuelraker/Desktop/train2.txt")
+#words = [mt.output_list[x][0] for x in xrange(len(mt.output_list))]
+#mt.get_pos(words)
+#mt.get_prevPOS
+#mt.get_prevNE
+#mt.add_feature(mt.POS)
+#mt.add_feature(mt.prevPOS)
+#mt.add_feature(mt.prevNE)
+#mt.Mallet_test_and_write(input=mt.output_list)
