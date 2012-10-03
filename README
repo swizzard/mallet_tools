@@ -1,14 +1,9 @@
+MOST RECENT EDIT: 10/3/12
 MalletTools is a class for interacting with the Mallet tagging/clustering/ML package (http://mallet.cs.umass.edu/).
 NOTE: For the purposes of this class, a "properly formatted list" is formatted in the following way:
 [[token1, [feature1,feature2,...,featureN,tag]],[token2,[feature1,feature2,...,featureN,tag],...]
 A "Mallet-compliant text file" is defined as one containing one token/feature/tag set per line, with the token as the first element of each line and its tag as the last. Each element on each line is tab-separated, and each line (including the last) ends with a newline character.
 The following methods are available:
-Mallet_test_and_write(self,input,file_out,verbose):
-	Verifies Mallet-compliant status of input (either a file or list) and 
-	writes it to a txt file you can then import into Mallet.
-	If verbose is set to True, will print the contents of each line written to 
-	the screen.
-	NOTE: input should be the (str) name of a file, or a properly-formatted list
 read_features(self,file_in,dest,verbose):
 	Reads features from a Mallet-compliant text file, storing them in self.dest.
 	If verbose is set to True, will print the contents of each line written to 
@@ -20,17 +15,61 @@ add_feature(self,feature_list,output_list,replace_NE_tags,position,verbose):
 	If replace_NE_tags is set to False, the user will be prompted to replace or 
 	add named-entity (NE) tags.
 	If verbose is set to True, results will be printed to the screen.
-write_features(self,file_in,file_out,features,verbose,test):
-	Reads features from either (self.)file_in or (self.)features and write them 
-	to a file using Mallet_test_and_write.
-	verbose is passed to Mallet_test_and_write (see above)
-	If test is set to True, the final feature of each token (i.e., its NE tag) is 
-	omitted when writing to the file, so the file can be used for testing purposes.
 add_list(self,list_name,l):
 	Assigns list l to self.list_name. Basically just a wrapper for setattr().
+write_out(self,file_out,test=False):
+	(10/3/12) Replaces the cumbersome and buggy Mallet_test_and_write()
+	and write_features() methods.
+	If test is set to True, omits the final item in each line, presumed to be the
+	gold-standard NER tag.
+get_words(self):
+	Creates a list of words from self.output_list.
+get_pos(self):
+	Uses NLTK's off-the-shelf part-of-speech tagger to create part-of-speech tags for
+	each word in self.words. As this tagger (nltk.tag.pos_tag) treats all punctuation 	separately (i.e., the POS tag of a comma is ",", the tag of a period is "."), this
+	method tags all such punctuation with one tag, "PUNC."
+	For more information on NLTK, please see http://nltk.googlecode.com
+get_cap(self):
+	This method tags each word in self.words with an appropriate capitalization tag.
+	There are three potential tags: "allcaps," "title," (for title-case words like 	"Clinton") and "noncapitalized."
+get_prevPOS(self), get_postPOS(self):
+	These methods associate each word in self.words with the POS tag of the preceding
+	or following word, respectively, with the exception of the first (last) words,
+	which are tagged "FIRST" ("LAST").
+get_prevCap(self), get_postCap(self):
+	Like get_prevPOS and get_postPOS, these methods associate each word in self.words
+	with the preceding or following capitalization tag. First and last words are 		treated as in the methods above.
+In addition to the class described above, mallet_tools contains the following extra 		methods:
+train_all(),test_all():
+	These methods create training and testing corpora tagged with all available tags
+	(POS, prevPOS, postPOS, cap, prevCap, postCap).
+mscore_setup():
+	This method processes a gold-standard annotated test corpus to be compatible with
+	the methods in the MalletTools class.
+train_noPOS(), test_noPOS():
+	Like train_all() and test_all() above, with the exception of part-of-speech tags.
+train_noContext(), test_noContext():
+	Like train_all() and test_all() above, with the exception of the tags created 	by the contextually-oriented get_prevPOS, get_postPOS, get_prevCap, and 		get_postCap methods.
 
-Also included is a custom error class, MalletIOError.
-MalletIOError should be raised with the following parameters:
-source_name: The name of the source that caused the error to be raised. Generally, source_name should be a file name or the name of a list.
-line: The line that caused the error to be raised.
-line_no: The number of the line or the index of the list item that caused the error to be raised.
+ADDED 10/3/12:
+confusion_tools.py is a file containing three methods for the creation of text files that are formatted to be scored by an NER-oriented scoring algorithm, as well as the creation and pretty-printing of confusion matrices based on their results.
+The three methods within confusion_tools are:
+create_testable(ref,system,f_out):
+	Combines a text file containing a list of gold-standard NER annotated tokens and 
+	a second file containing the tags output by a classifier (for example, MALLET's 
+	CRF SimpleTagger.) The resulting output file is formatted in the following way:
+	TOKEN GOLD SYSTEM
+	Where GOLD is the gold-standard NER tag and SYSTEM is the classifier's output.
+	The parameter ref should be set to the location of the gold-standard annotated
+	file, while system should be set to the location of the classifier's output.
+	f_out should be set to the desired location of the final output file.
+get_confusion(f):
+	Takes a text file formatted as above (TOKEN GOLD SYSTEM) and generates a confusion
+	matrix for the results contained therein. The rows of the resulting matrix reflect
+	the gold-standard annotations, while the columns reflect the output. The final
+	column in each row contains the total number of each gold-standard tag found.
+	NOTE: currently, get_confusion only generates confusion matrices for BIO-based
+	NER tagging systems.
+print_CM(f):
+	Calls get_confusion and pretty-prints the resulting confusion matrix, along with
+	the name of the file read from.

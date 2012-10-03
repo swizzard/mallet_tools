@@ -14,89 +14,6 @@ class MalletTools:
 		self.features = features
 	def add_list(self,list_name,l):
 		setattr(self,list_name,l)	
-	def Mallet_test_and_write(self,input=None,file_out=None,verbose=True):
-		"""Tests whether input is Mallet-compliant and, if so, writes it to a file.
-		:param input: the input to be tested and written
-		:type input: EITHER a file name OR a list
-		NOTE: if Mallet_test_and_write is passed a file object, it will fail. Sorry.
-		:param file_out: the file to write to
-		:type file_out: str (name of target file)
-		:param verbose: if True, prints each line written to the screen before proceeding
-		:type verbose: bool (defaults to True)"""
-		if not input:
-			#assert self.file_in or self.features
-			if self.file_in:
-				input = self.file_in
-			elif self.features_list:
-				input = self.features
-		if not file_out:
-			file_out = self.file_out
-		if isinstance(input,str):
-			source_name = "file " + str(input)
-			infile = open(input)
-			source = infile.readlines()
-			infile.close()
-		elif isinstance(input,list):
-			source_name = "supplied input"
-			source = input
-		else:
-			raise ValueError("input must be valid filename or list!")
-		output = open(file_out,"w")
-		for i in xrange(len(source)):
-			line = source[i][0]+" "
-			line+=" ".join(source[i][-1])+"\n"
-			#if re.match(self.acceptable,line):
-			output.write(line)
-# 			#if not re.match(self.acceptable,line):
-# 				#raise MalletIOError(source_name,line,source.index(line)+1)
-# 			elif re.match(self.whitespace,line):
-# 				pass
-# 			else:
-# 				raise MalletIOError(source_name,line,i)			
-# 				#if input.index(line)+1 < len(input) and not re.match(r'\n$',line):
-# 				#	output.write("\n")
-		output.close()
-		if verbose:	
-			for line in source:
-				print "Successfully wrote\n",line,"to",file_out
-		print "Done."
-	def write_features(self,file_in=None,file_out=None,features=None,verbose=True,test=False):
-		"""Write a Mallet-compliant list of features
-		:param file_in: an input file. 
-		:param file_out: the name of the file to write to
-		:param features: a list formatted in the following way:
-			[[token1,[feature1,feature2...featureN,label]],[token2,[feature1,feature2...featureN,label]],...]
-			NOTE: there should be the same number of features for each word.
-			NOTE: set features to None if using file_in
-		:param test: whether or not the data to be written is for testing purposes"""
-		#assert not (file_in and self.file_in),"Source file already present!"
-		#assert not (file_out and self.file_out),"Output file already present!"
-		#assert not (features and self.features),"List of features already present!"
-		if self.file_in:
-			file_in = self.file_in
-		if file_in:	
-			self.Mallet_test_and_write(file_in,file_out)
-		if self.file_out:
-			file_out = self.file_out
-		if self.features:
-			features = self.features
-		else:
-			output_list = []
-			for j in xrange(len(features)):
-				output_string = ""
-				i = 0
-				output_string += features[j][0]+"\t"
-				for k in xrange(len(features[j][1])):
-					feature = features[j][1][k]
-					output_string += feature
-					i += 1
-					if i < len(features[1]):
-						output_string += "\t"
-					elif test:
-						pass	
-				output_string += "\n"
-				output_list.append(output_string)
-			self.Mallet_test_and_write(output_list,file_out,verbose)
 	def read_features(self,file_in=None,dest="output_list",verbose=True):
 		"""Read features from a properly-formatted text file and convert them to a list
 		of format [[token1,[feature1,feature2,...,featureN]],[token2,[feature1,feature2,...,
@@ -202,9 +119,11 @@ class MalletTools:
 			print "Done!"
 			if verbose:
 				print self.output_list
-	def get_pos(self,list):
+	def get_pos(self):
+		if not self.words:
+			self.get_words()
 		punc = string.punctuation
-		pos = nltk.tag.pos_tag(list)
+		pos = nltk.tag.pos_tag(self.words)
 		for x in xrange(len(pos)):
 			if pos[x][0] == pos[x][1] and not pos[x][1].isalpha():
 				punc+=pos[x][1]
@@ -214,39 +133,121 @@ class MalletTools:
 				self.POS.append("PUNC")
 			else:
 				self.POS.append(pos[x][1])
-	def get_prevNE(self):
-		self.prevNE=["FIRST"]
-		for x in xrange(1,len(self.output_list)):
-			self.prevNE.append(self.output_list[x-1][1][-1])
 	def get_prevPOS(self):
 		self.prevPOS=["FIRST"]
 		for x in xrange(1,len(self.POS)):
 			self.prevPOS.append(self.POS[x-1])
-	class MalletIOError(Exception):
-		def __init__(self,source_name,line,line_no):
-			"""A custom error class for Mallet-related tasks.
-			:param source_name: the name of the source of the error.
-			:type source_name: str
-			NOTE: as implemented here (see below), source_name is going to be either the name of
-			the file supplied (if Mallet_test_and_write is passed a file name), or "supplied input"
-			(if it's passed a list)
-			:param line: the offending line
-			:type line: str
-			:param line_no: the number of the offending line
-			:type line_no: int
-			NOTE: as implemented here (see below), line_no counts from 0, as this error is only
-			raised AFTER read_lines is called"""
-			self.source_name = source_name
-			self.line = line
-			self.line_no = line_no
-			print "The line:\n",self.line,"\n","line number",self.line_no,"in",self.source_name,"\nis improperly formatted"
-			
-#mt = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/train_nwire.txt",file_out="/Users/samuelraker/Desktop/train2.txt")
-#words = [mt.output_list[x][0] for x in xrange(len(mt.output_list))]
-#mt.get_pos(words)
-#mt.get_prevPOS
-#mt.get_prevNE
-#mt.add_feature(mt.POS)
-#mt.add_feature(mt.prevPOS)
-#mt.add_feature(mt.prevNE)
-#mt.Mallet_test_and_write(input=mt.output_list)
+	def get_postPOS(self):
+		self.postPOS=["LAST"]
+		for x in xrange(len(self.POS)-1):
+			self.postPOS.insert(-1,self.POS[x+1])
+	def get_cap(self):
+		if not self.words:
+			self.get_words()
+		self.cap = []
+		for x in xrange(len(self.words)):
+			if self.words[x].isupper():
+				self.cap.append("allcaps")
+			elif self.words[x].istitle():
+				self.cap.append("titled")
+			else:
+				self.cap.append("noncapitalized")
+	def get_prevCap(self):
+		self.prevCap = ["FIRST"]
+		for x in xrange(1,len(self.cap)):
+			self.prevCap.append(self.cap[x-1])
+	def get_postCap(self):
+		self.postCap = ["LAST"]
+		for x in xrange(len(self.cap)-1):
+			self.postCap.insert(-1,self.cap[x+1])
+	def get_words(self):
+		self.words = [self.output_list[x][0] for x in xrange(len(self.output_list))]
+	def write_out(self,file_out,test=False):
+		with open(file_out,"w") as f:
+			for x in xrange(len(self.output_list)):
+				f.write(self.output_list[x][0]+" ")
+				for i in xrange(len(self.output_list[x][1])-1):
+					f.write(self.output_list[x][1][i] + " ")
+				if test==False:
+					f.write(self.output_list[x][1][-1]+"\n")
+				else:
+					f.write("\n")
+def train_all():
+	mt = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/train_nwire.txt")
+	mt.get_words()
+	mt.get_pos()
+	mt.get_cap()
+	mt.get_prevPOS()
+	mt.get_postPOS()
+	mt.get_prevCap()
+	mt.get_postCap()
+	mt.add_feature(mt.POS)
+	mt.add_feature(mt.prevPOS)
+	mt.add_feature(mt.postPOS)
+	mt.add_feature(mt.cap)
+	mt.add_feature(mt.prevCap)
+	mt.add_feature(mt.postCap)
+	mt.write_out(file_out="/Users/samuelraker/Desktop/name_data/train_all.txt")
+	return mt
+def test_all():
+	mtest = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/test_nwire.txt")
+	mtest.get_words()
+	mtest.get_pos()
+	mtest.get_cap()
+	mtest.get_prevPOS()
+	mtest.get_postPOS()
+	mtest.get_prevCap()
+	mtest.get_postCap()
+	mtest.add_feature(mtest.POS)
+	mtest.add_feature(mtest.prevPOS)
+	mtest.add_feature(mtest.postPOS)
+	mtest.add_feature(mtest.cap)
+	mtest.add_feature(mtest.prevCap)
+	mtest.add_feature(mtest.postCap)
+	mtest.write_out(file_out="/Users/samuelraker/Desktop/name_data/test_all.txt",test=True)
+def mscore_setup():
+	mscore = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/test_nwire.txt")
+	mscore.write_out(file_out="/Users/samuelraker/Desktop/name_data/score_nwire.txt")
+def train_noPOS():
+	train_noPOS = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/train_nwire.txt")
+	train_noPOS.get_words()
+	train_noPOS.get_cap()
+	train_noPOS.get_prevCap()
+	train_noPOS.get_postCap()
+	train_noPOS.add_feature(train_noPOS.cap)
+	train_noPOS.add_feature(train_noPOS.prevCap)
+	train_noPOS.add_feature(train_noPOS.postCap)
+	train_noPOS.write_out(file_out="/Users/samuelraker/Desktop/name_data/train_noPOS.txt")
+def test_noPOS():
+	test_noPOS = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/test_nwire.txt")
+	test_noPOS.get_words()
+	test_noPOS.get_cap()
+	test_noPOS.get_prevCap()
+	test_noPOS.get_postCap()
+	test_noPOS.add_feature(test_noPOS.cap)
+	test_noPOS.add_feature(test_noPOS.prevCap)
+	test_noPOS.add_feature(test_noPOS.postCap)
+	test_noPOS.write_out(file_out="/Users/samuelraker/Desktop/name_data/test_noPOS.txt",test=True)
+def train_noContext():
+	train_noContext = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/train_nwire.txt")
+	train_noContext.get_words()
+	train_noContext.get_cap()
+	train_noContext.get_pos()
+	train_noContext.add_feature(train_noContext.POS)
+	train_noContext.add_feature(train_noContext.cap)
+	train_noContext.write_out(file_out="/Users/samuelraker/Desktop/name_data/train_noContext.txt")
+def test_noContext():
+	test_noContext = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/test_nwire.txt")
+	test_noContext.get_words()
+	test_noContext.get_cap()
+	test_noContext.get_pos()
+	test_noContext.add_feature(test_noContext.POS)
+	test_noContext.add_feature(test_noContext.cap)
+	test_noContext.write_out(file_out="/Users/samuelraker/Desktop/name_data/test_noContext.txt")
+train_all()
+test_all()
+mscore_setup()
+train_noPOS()
+test_noPOS()
+train_noContext()
+test_noContext()
