@@ -1,4 +1,18 @@
 def create_testable(ref,system,f_out):
+	"""Creates a text file suitable for testing by appending the results of a classifier to a list of
+	gold-standard annotated tokens line-by-line.
+	The file created by this method will be formatted as follows:
+	TOKENi GOLDi SYSTEMi
+	TOKENj GOLDj SYSTEMj
+	...
+	TOKENn GOLDn SYSTEMn
+	where GOLDi is the gold-standard annotation and SYSTEMi the result of the classifier for the ith token.
+	:param ref: the location of the reference (gold-standard) file
+	:type ref: str
+	:param system: the location of the results of the classifier
+	:type system: str
+	:param f_out: the location of the file to write the results to
+	:type f_out: str"""
 	r_file = open(ref)
 	r_lines = r_file.readlines()
 	r_file.close()
@@ -13,6 +27,10 @@ def create_testable(ref,system,f_out):
 	output_file.close()
 
 def get_confusion(f):
+	"""Takes a text file formatted in the manner produced by create_testable, above, and
+	generates a confusion matrix from it. NOTE: currently only works for BIO/GPE-PER-ORG-O taggers.
+	:param f: the location of the file to use in constructing the matrix
+	:type f: str"""
 	B_GPE = [0,0,0,0,0,0,0,0]
 	I_GPE = [0,0,0,0,0,0,0,0]
 	B_PER = [0,0,0,0,0,0,0,0]
@@ -142,6 +160,9 @@ def get_confusion(f):
 	return cm
 
 def print_CM(f):
+	"""Calls get_confusion, above, and pretty-prints the result.
+	:param f: the location of the file to use in the construction of the matrix
+	:type f: str"""
 	cm = get_confusion(f)
 	print "{0:15}{1:*^56}".format("","Confusion Matrix")
 	print "{0:15}{1:^56}".format("",f)

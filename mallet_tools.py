@@ -120,6 +120,7 @@ class MalletTools:
 			if verbose:
 				print self.output_list
 	def get_pos(self):
+		"""Get the part of speech of each token in self.words using NLTK's pre-trained, off-the-shelf part-of-speech tagger."""
 		if not self.words:
 			self.get_words()
 		punc = string.punctuation
@@ -163,6 +164,12 @@ class MalletTools:
 	def get_words(self):
 		self.words = [self.output_list[x][0] for x in xrange(len(self.output_list))]
 	def write_out(self,file_out,test=False):
+		"""Write self.output_list to a file. Should be done after all features are extracted and added (using add.feature())
+		:param file_out: the destination of the file to be written.
+		:type file_out: str
+		:param test: whether or not the file being written is to be used for testing purposes. If True, the final feature of each
+		token (presumably the gold-standard NER tag) will be omitted when writing the file.
+		:type test: bool"""
 		with open(file_out,"w") as f:
 			for x in xrange(len(self.output_list)):
 				f.write(self.output_list[x][0]+" ")
@@ -173,7 +180,7 @@ class MalletTools:
 				else:
 					f.write("\n")
 def train_all():
-	mt = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/train_nwire.txt")
+	mt = MalletTools(file_in=)
 	mt.get_words()
 	mt.get_pos()
 	mt.get_cap()
@@ -187,10 +194,10 @@ def train_all():
 	mt.add_feature(mt.cap)
 	mt.add_feature(mt.prevCap)
 	mt.add_feature(mt.postCap)
-	mt.write_out(file_out="/Users/samuelraker/Desktop/name_data/train_all.txt")
+	mt.write_out(file_out)
 	return mt
 def test_all():
-	mtest = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/test_nwire.txt")
+	mtest = MalletTools(file_in=)
 	mtest.get_words()
 	mtest.get_pos()
 	mtest.get_cap()
@@ -204,12 +211,12 @@ def test_all():
 	mtest.add_feature(mtest.cap)
 	mtest.add_feature(mtest.prevCap)
 	mtest.add_feature(mtest.postCap)
-	mtest.write_out(file_out="/Users/samuelraker/Desktop/name_data/test_all.txt",test=True)
+	mtest.write_out(file_out,test=True)
 def mscore_setup():
-	mscore = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/test_nwire.txt")
-	mscore.write_out(file_out="/Users/samuelraker/Desktop/name_data/score_nwire.txt")
+	mscore = MalletTools(file_in=)
+	mscore.write_out(file_out=)
 def train_noPOS():
-	train_noPOS = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/train_nwire.txt")
+	train_noPOS = MalletTools(file_in=)
 	train_noPOS.get_words()
 	train_noPOS.get_cap()
 	train_noPOS.get_prevCap()
@@ -217,9 +224,9 @@ def train_noPOS():
 	train_noPOS.add_feature(train_noPOS.cap)
 	train_noPOS.add_feature(train_noPOS.prevCap)
 	train_noPOS.add_feature(train_noPOS.postCap)
-	train_noPOS.write_out(file_out="/Users/samuelraker/Desktop/name_data/train_noPOS.txt")
+	train_noPOS.write_out(file_out=)
 def test_noPOS():
-	test_noPOS = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/test_nwire.txt")
+	test_noPOS = MalletTools(file_in=)
 	test_noPOS.get_words()
 	test_noPOS.get_cap()
 	test_noPOS.get_prevCap()
@@ -227,23 +234,23 @@ def test_noPOS():
 	test_noPOS.add_feature(test_noPOS.cap)
 	test_noPOS.add_feature(test_noPOS.prevCap)
 	test_noPOS.add_feature(test_noPOS.postCap)
-	test_noPOS.write_out(file_out="/Users/samuelraker/Desktop/name_data/test_noPOS.txt",test=True)
+	test_noPOS.write_out(file_out=,test=True)
 def train_noContext():
-	train_noContext = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/train_nwire.txt")
+	train_noContext = MalletTools(file_in=)
 	train_noContext.get_words()
 	train_noContext.get_cap()
 	train_noContext.get_pos()
 	train_noContext.add_feature(train_noContext.POS)
 	train_noContext.add_feature(train_noContext.cap)
-	train_noContext.write_out(file_out="/Users/samuelraker/Desktop/name_data/train_noContext.txt")
+	train_noContext.write_out(file_out=)
 def test_noContext():
-	test_noContext = MalletTools(file_in="/Users/samuelraker/Desktop/name_data/test_nwire.txt")
+	test_noContext = MalletTools(file_in=)
 	test_noContext.get_words()
 	test_noContext.get_cap()
 	test_noContext.get_pos()
 	test_noContext.add_feature(test_noContext.POS)
 	test_noContext.add_feature(test_noContext.cap)
-	test_noContext.write_out(file_out="/Users/samuelraker/Desktop/name_data/test_noContext.txt")
+	test_noContext.write_out(file_out=,test=True)
 train_all()
 test_all()
 mscore_setup()
